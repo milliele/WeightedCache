@@ -4,6 +4,7 @@ import random
 
 import collections
 import numpy as np
+# import logging
 
 from icarus.registry import register_strategy
 from icarus.util import inheritdoc, path_links
@@ -19,16 +20,16 @@ class DefofQ(object):
 	def __init__(self, alpha=1.0):
 		self._dist = collections.defaultdict(int)
 		self._maxdist = -1
-		self.alpha=alpha
+		self.alpha = alpha
 
 	def q(self,k):
 		if self._maxdist == -1:
 			return 0
 		return self._dist[k]*1.0/self._dist[self._maxdist]
 
-	def remove(self, k):
-		if k==self._maxdist:
-			self._maxdist=max(self._dist.keys(), key=lambda x:self._dist[x])
+	# def remove(self, k):
+	# 	if k==self._maxdist:
+	# 		self._maxdist=max(self._dist.keys(), key=lambda x:self._dist[x])
 
 	def update(self,k, d):
 		self._dist[k]=(1-self.alpha)*self._dist[k]+self.alpha*d
@@ -45,9 +46,11 @@ class QStrategy(Strategy):
 	"""
 
 	@inheritdoc(Strategy)
-	def __init__(self, view, controller, **kwargs):
+	def __init__(self, view, controller, alpha=1.0, **kwargs):
 		super(QStrategy, self).__init__(view, controller)
-		self._qs = {v:DefofQ() for v in self.view.cache_nodes()}
+		# logger = logging.getLogger('strategy')
+		# logger.info(alpha)
+		self._qs = {v:DefofQ(alpha) for v in self.view.cache_nodes()}
 
 	@inheritdoc(Strategy)
 	def process_event(self, time, receiver, content, log):
@@ -68,6 +71,7 @@ class QStrategy(Strategy):
 				elif self.controller.has_content(v):
 					serving_node = v
 					break
+		else:
 			# No cache hits, get content from source
 			self.controller.get_content(v)
 			serving_node = v
@@ -82,8 +86,8 @@ class QStrategy(Strategy):
 				self._qs[v].update(content, weight)
 				if record[v]:
 					content = self.controller.put_content(v)
-					if content!=None:
-						self._qs[v].remove(content)
+					# if content!=None:
+					# 	self._qs[v].remove(content)
 		self.controller.end_session()
 
 @register_strategy('GRD')
@@ -112,6 +116,7 @@ class GreedyStrategy(Strategy):
 				if self.controller.get_content(v):
 					serving_node = v
 					break
+		else:
 			# No cache hits, get content from source
 			self.controller.get_content(v)
 			serving_node = v

@@ -13,12 +13,13 @@ import sys
 import signal
 import traceback
 import networkx as nx
+import random
 
 from icarus.execution import exec_experiment, exec_offline_experiment
 from icarus.registry import TOPOLOGY_FACTORY, CACHE_PLACEMENT, CONTENT_PLACEMENT, \
 							CACHE_POLICY, WORKLOAD, DATA_COLLECTOR, STRATEGY
 from icarus.results import ResultSet
-from icarus.util import SequenceNumber, timestr, TruncatedNormal
+from icarus.util import SequenceNumber, timestr
 
 
 __all__ = ['Orchestrator', 'run_scenario']
@@ -214,11 +215,11 @@ def run_scenario(settings, params, curr_exp, n_exp):
 						 % topology_name)
 			return None
 		topology = TOPOLOGY_FACTORY[topology_name](**topology_spec)
-		if 'std' in topology_spec:
-			dist = TruncatedNormal(topology_spec['avg'], topology_spec['std'], topology_spec['seed'])
+		if 'edge_weight' in topology_spec:
+			random.seed(topology_spec['seed'])
 			attr = {}
 			for u, v in topology.edges_iter():
-				attr[(u,v)] = dist.rv()
+				attr[(u,v)] = random.choice(topology_spec['edge_weight'])
 			nx.set_edge_attributes(topology, 'util', attr)
 
 		workload_spec = tree['workload']

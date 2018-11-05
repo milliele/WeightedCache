@@ -538,13 +538,13 @@ class RequestHopCollector(DataCollector):
         # self.cont_path_len = 0
         self.sess_count += 1
 
-    @inheritdoc(DataCollector)
-    def request_hop(self, u, v, main_path=True):
-        self.req_path_len += self.view.link_weight(u,v)
-
     # @inheritdoc(DataCollector)
-    # def content_hop(self, u, v, main_path=True):
-    #     self.cont_path_len += 1
+    # def request_hop(self, u, v, main_path=True):
+    #
+
+    @inheritdoc(DataCollector)
+    def content_hop(self, u, v, main_path=True):
+        self.req_path_len += self.view.link_weight(u, v)
 
     @inheritdoc(DataCollector)
     def end_session(self, success=True):

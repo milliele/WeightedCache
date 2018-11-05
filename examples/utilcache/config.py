@@ -33,14 +33,13 @@ RESULTS_FORMAT = 'PICKLE'
 # Number of times each experiment is replicated
 # This is necessary for extracting confidence interval of selected metrics
 N_REPLICATIONS = 1
+M_REPLICATIONS = 1
+M_BEGIN = 0
 
 # List of metrics to be measured in the experiments
 # The implementation of data collectors are located in ./icaurs/execution/collectors.py
 DATA_COLLECTORS = ['WEIGHT']
 
-# Range of alpha values of the Zipf distribution using to generate content requests
-# alpha values must be positive. The greater the value the more skewed is the 
-# content popularity distribution
 # Range of alpha values of the Zipf distribution using to generate content requests
 # alpha values must be positive. The greater the value the more skewed is the 
 # content popularity distribution
@@ -50,14 +49,13 @@ DATA_COLLECTORS = ['WEIGHT']
 # This would give problems while trying to plot the results because if for
 # example I wanted to filter experiment with alpha=0.8, experiments with
 # alpha = 0.799999999999 would not be recognized 
-ALPHA = [0.6, 0.8, 1.0, 1.2]
+ALPHA = [0.6, 0.7, 0.8, 0.9]
 
 # Total size of network cache as a fraction of content population
 NETWORK_CACHE = [0.004, 0.002, 0.01, 0.05]
 
 # variance
-STD = [0, 4, 8, 16]
-AVG = max(STD)*3+1 # 3-sita policy
+EDGE_WEIGHTS = [10,100,1000]
 
 # Number of content objects
 N_CONTENTS = 3*10**5
@@ -67,11 +65,11 @@ NETWORK_REQUEST_RATE = 12.0
 
 # Number of content requests generated to prepopulate the caches
 # These requests are not logged
-N_WARMUP_REQUESTS = 6*10**5
+N_WARMUP_REQUESTS = 3*10**6
 
 # Number of content requests generated after the warmup and logged
 # to generate results. 
-N_MEASURED_REQUESTS = 6*10**5
+N_MEASURED_REQUESTS = 6*10**6
 
 SEED = 0
 
@@ -81,7 +79,7 @@ TOPOLOGIES =  [
         'GEANT',
         # 'WIDE',
         # 'GARR',
-        'TISCALI',
+        # 'TISCALI',
               ]
 # TOPOLOGIES =  [
 #         'GEANT',
@@ -93,21 +91,12 @@ TOPOLOGIES =  [
 # List of caching and routing strategies
 # The code is located in ./icarus/models/strategy.py
 STRATEGIES = [
-     'LCE',             # Leave Copy Everywhere
-     # # 'NO_CACHE',        # No caching, shorest-path routing
-     # # 'HR_SYMM',         # Symmetric hash-routing
-     # # 'HR_ASYMM',        # Asymmetric hash-routing
-     # # 'HR_MULTICAST',    # Multicast hash-routing
-     # # 'HR_HYBRID_AM',    # Hybrid Asymm-Multicast hash-routing
-     # # 'HR_HYBRID_SM',    # Hybrid Symm-Multicast hash-routing
-     # # 'CL4M',            # Cache less for more
-     # 'PROB_CACHE',      # ProbCache
-     # # 'LCD',             # Leave Copy Down
-     # # 'RAND_CHOICE',     # Random choice: cache in one random cache on path
-     # # 'RAND_BERNOULLI',  # Random Bernoulli: cache randomly in caches on path
+     # 'LCE-LFU',             # Leave Copy Everywhere
+     # 'LCE-LRU',             # Leave Copy Everywhere
+     'PROB_CACHE',          # ProbCache
      'WLRU',
-     'WLFU',
-     'GRD',
+     # 'WLFU',
+     # 'GRD',
 	 # 'PD',
              ]
 
@@ -115,54 +104,90 @@ STRATEGIES = [
 # # Supported policies are: 'LRU', 'LFU', 'FIFO', 'RAND' and 'NULL'
 # # Cache policy implmentations are located in ./icarus/models/cache.py
 CACHE_POLICY = {
-     'LCE': {
+     'LCE-LFU': {
          'strategy':{
              'name':'LCE',
          },
          'cache_policy':{
-             'name':'LRU',
-         }
+             'name':'PERFECT_LFU',
+         },
+		 'workload':{
+			 'n_warmup': N_WARMUP_REQUESTS/10,
+			 'n_measured': N_MEASURED_REQUESTS/10,
+		 }
      },
+	'LCE-LRU': {
+		'strategy': {
+			'name': 'LCE',
+		},
+		'cache_policy': {
+			'name': 'LRU',
+		},
+		 'workload':{
+			 'n_warmup': N_WARMUP_REQUESTS/10,
+			 'n_measured': N_MEASURED_REQUESTS/10,
+		 }
+	},
     'PROB_CACHE': {
          'strategy':{
              'name':'PROB_CACHE',
          },
-             'cache_policy':{
-                 'name':'LRU',
-             }
-         },
+		 'cache_policy':{
+			 'name':'LRU',
+		 },
+		 'workload':{
+			 'n_warmup': N_WARMUP_REQUESTS/10,
+			 'n_measured': N_MEASURED_REQUESTS/10,
+		 }
+	 },
     'WLRU': {
          'strategy':{
              'name':'Q',
          },
-             'cache_policy':{
-                 'name':'LRU',
-             }
-         },
+		 'cache_policy':{
+			 'name':'LRU',
+		 },
+		 'workload':{
+			 'n_warmup': N_WARMUP_REQUESTS,
+			 'n_measured': N_MEASURED_REQUESTS,
+		 }
+	 },
     'WLFU': {
          'strategy':{
              'name':'Q',
          },
-             'cache_policy':{
-                 'name':'PERFECT_LFU',
-             }
-         },
+		 'cache_policy':{
+			 'name':'PERFECT_LFU',
+		 },
+		 'workload':{
+			 'n_warmup': N_WARMUP_REQUESTS,
+			 'n_measured': N_MEASURED_REQUESTS,
+		 }
+	 },
     'GRD': {
          'strategy':{
              'name':'GRD',
          },
-             'cache_policy':{
-                 'name':'GRD',
-             }
-         },
+		 'cache_policy':{
+			 'name':'GRD',
+		 },
+		 'workload':{
+			 'n_warmup': N_WARMUP_REQUESTS/10,
+			 'n_measured': N_MEASURED_REQUESTS/10,
+		 }
+	 },
 	'PD': {
-			 'strategy':{
-				 'name':'PD',
-				 'offline': True,
-			 },
-             'cache_policy':{
-                 'name':'LRU',
-             }
+		 'strategy':{
+			 'name':'PD',
+			 'offline': True,
+		 },
+		 'cache_policy':{
+			 'name':'LRU',
+		 },
+		 'workload':{
+			 'n_warmup': N_WARMUP_REQUESTS,
+			 'n_measured': N_MEASURED_REQUESTS,
+		 }
 	},
 }
 
@@ -171,67 +196,82 @@ EXPERIMENT_QUEUE = deque()
 default = Tree()
 default['workload'] = {'name':       'STATIONARY',
                        'n_contents': N_CONTENTS,
-                       'n_warmup':   N_WARMUP_REQUESTS,
-                       'n_measured': N_MEASURED_REQUESTS,
                        'rate':       NETWORK_REQUEST_RATE
                        }
 default['cache_placement']['name'] = 'UNIFORM'
 default['content_placement']['name'] = 'UNIFORM'
-default['content_placement']['seed'] = SEED
-default['topology']['avg'] = AVG
-default['topology']['seed'] = SEED
+default['topology']['edge_weight'] = EDGE_WEIGHTS
+# default['content_placement']['seed'] = SEED
+# default['topology']['seed'] = SEED
 # default['cache_policy']['name'] = CACHE_POLICY
 
-# # Create experiments multiplexing all desired parameters
-# for alpha in ALPHA:
-#     for strategy in STRATEGIES:
-#         for topology in TOPOLOGIES:
-#             for network_cache in NETWORK_CACHE:
-#                 experiment = copy.deepcopy(default)
-#                 experiment['workload']['alpha'] = alpha
-#                 experiment['strategy']['name'] = strategy
-#                 experiment['topology']['name'] = topology
-#                 experiment['cache_placement']['network_cache'] = network_cache
-#                 experiment['desc'] = "Alpha: %s, strategy: %s, topology: %s, network cache: %s" \
-#                                      % (str(alpha), strategy, topology, str(network_cache))
-#                 EXPERIMENT_QUEUE.append(experiment)
+# def generate_scenarios(n_replication, n_begin=M_BEGIN):
+# 	scenarios = []
+# 	for alpha in ALPHA:
+# 		for topology in TOPOLOGIES:
+# 			scenarios.append((alpha, NETWORK_CACHE[2], topology))
+#
+# 	for network_cache in NETWORK_CACHE:
+# 		for topology in TOPOLOGIES:
+# 			scenarios.append((ALPHA[2], network_cache, topology))
+#
+# 	scenarios = list(set(scenarios))
+#
+# 	for scenario in scenarios:
+# 		for _ in range(n_begin, n_begin+n_replication):
+# 			yield {'alpha': scenario[0], 'network_cache': scenario[1], 'topology': scenario[2], 'seed': _}
 
+def generate_scenarios(n_replication, n_begin=M_BEGIN):
+	scenarios = []
+	alphas = [0.1,0.3,0.5,0.7,0.9]
+	for alpha in alphas:
+		# for topology in TOPOLOGIES:
+			scenarios.append((ALPHA[2], NETWORK_CACHE[2], 'GEANT', alpha))
 
-for alpha in ALPHA:
+	scenarios = list(set(scenarios))
+
+	for scenario in scenarios:
+		for _ in range(n_begin, n_begin+n_replication):
+			yield {'alpha': scenario[0], 'network_cache': scenario[1], 'topology': scenario[2], 'seed': _, 'walpha': scenario[3]}
+
+# for scenario in generate_scenarios(M_REPLICATIONS):
+# 	for strategy in STRATEGIES:
+# 		experiment = copy.deepcopy(default)
+# 		experiment['workload']['alpha'] = scenario['alpha']
+# 		experiment['content_placement']['seed'] = scenario['seed']
+# 		experiment['topology']['seed'] = scenario['seed']
+# 		experiment['topology']['name'] = scenario['topology']
+# 		experiment['cache_placement']['network_cache'] = scenario['network_cache']
+#
+# 		experiment['strategy'] = CACHE_POLICY[strategy]['strategy']
+# 		experiment['workload']['n_warmup'] = CACHE_POLICY[strategy]['workload']['n_warmup']
+# 		experiment['workload']['n_measured'] = CACHE_POLICY[strategy]['workload']['n_measured']
+# 		experiment['cache_policy']['name'] = CACHE_POLICY[strategy]['cache_policy']['name']
+#
+# 		experiment['label']['name'] = strategy
+#
+# 		experiment['desc'] = "Alpha: %s, strategy: %s, topology: %s, network cache: %s" \
+# 							 % (str(scenario['alpha']), strategy, scenario['topology'], str(scenario['network_cache']))
+# 		EXPERIMENT_QUEUE.append(experiment)
+
+for scenario in generate_scenarios(M_REPLICATIONS):
 	for strategy in STRATEGIES:
-		for topology in TOPOLOGIES:
-			experiment = copy.deepcopy(default)
-			experiment.update(CACHE_POLICY[strategy])
-			experiment['workload']['alpha'] = alpha
-			experiment['topology']['name'] = topology
-			experiment['topology']['std'] = STD[2]
-			experiment['cache_placement']['network_cache'] = NETWORK_CACHE[1]
-			experiment['desc'] = "Alpha: %s, strategy: %s, topology: %s, network cache: %s, STD:%s" \
-								 % (str(alpha), strategy, topology, str(NETWORK_CACHE[1]), str(STD[2]))
-			EXPERIMENT_QUEUE.append(experiment)
+		experiment = copy.deepcopy(default)
+		experiment['workload']['alpha'] = scenario['alpha']
+		experiment['content_placement']['seed'] = scenario['seed']
+		experiment['topology']['seed'] = scenario['seed']
+		experiment['topology']['name'] = scenario['topology']
+		experiment['cache_placement']['network_cache'] = scenario['network_cache']
 
-for network_cache in NETWORK_CACHE:
-	for strategy in STRATEGIES:
-		for topology in TOPOLOGIES:
-			experiment = copy.deepcopy(default)
-			experiment.update(CACHE_POLICY[strategy])
-			experiment['workload']['alpha'] = ALPHA[1]
-			experiment['topology']['name'] = topology
-			experiment['topology']['std'] = STD[2]
-			experiment['cache_placement']['network_cache'] = network_cache
-			experiment['desc'] = "Alpha: %s, strategy: %s, topology: %s, network cache: %s, STD:%s" \
-								 % (str(ALPHA[1]), strategy, topology, str(network_cache), str(STD[2]))
-			EXPERIMENT_QUEUE.append(experiment)
 
-for std in STD:
-	for strategy in STRATEGIES:
-		for topology in TOPOLOGIES:
-			experiment = copy.deepcopy(default)
-			experiment.update(CACHE_POLICY[strategy])
-			experiment['workload']['alpha'] = ALPHA[1]
-			experiment['topology']['name'] = topology
-			experiment['topology']['std'] = std
-			experiment['cache_placement']['network_cache'] = NETWORK_CACHE[1]
-			experiment['desc'] = "Alpha: %s, strategy: %s, topology: %s, network cache: %s, STD:%s" \
-								 % (str(ALPHA[1]), strategy, topology, str(NETWORK_CACHE[1]), str(std))
-			EXPERIMENT_QUEUE.append(experiment)
+		experiment['strategy'] = CACHE_POLICY[strategy]['strategy']
+		experiment['strategy']['alpha'] = scenario['walpha']
+		experiment['workload']['n_warmup'] = CACHE_POLICY[strategy]['workload']['n_warmup']
+		experiment['workload']['n_measured'] = CACHE_POLICY[strategy]['workload']['n_measured']
+		experiment['cache_policy']['name'] = CACHE_POLICY[strategy]['cache_policy']['name']
+
+		experiment['label']['name'] = strategy
+
+		experiment['desc'] = "Alpha: %s, strategy: %s, topology: %s, network cache: %s, walpha: %s" \
+							 % (str(scenario['alpha']), strategy, scenario['topology'], str(scenario['network_cache']), str(scenario['walpha']))
+		EXPERIMENT_QUEUE.append(experiment)

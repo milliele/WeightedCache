@@ -23,9 +23,9 @@ RESULTS_TEXT=${CURR_DIR}/${RESULTS_NAME}.txt
 # Add Icarus code to PYTHONPATH
 export PYTHONPATH=${ICARUS_DIR}:$PYTHONPATH
 
-# Plot results
-echo "Plot results"
-python ${CURR_DIR}/plotresults.py --results ${RESULTS_FILE} --output ${PLOTS_DIR} ${CONFIG_FILE}
+# Read results
+echo "Read results"
+python ${CURR_DIR}/readresults.py --results ${RESULTS_FILE}
 
 ### Read results
 #echo "Read results"

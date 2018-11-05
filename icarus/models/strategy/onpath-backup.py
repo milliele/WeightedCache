@@ -227,7 +227,7 @@ class ProbCache(Strategy):
     """
 
     @inheritdoc(Strategy)
-    def __init__(self, view, controller, t_tw=10, **kwargs):
+    def __init__(self, view, controller, t_tw=10):
         super(ProbCache, self).__init__(view, controller)
         self.t_tw = t_tw
         self.cache_size = view.cache_nodes(size=True)
