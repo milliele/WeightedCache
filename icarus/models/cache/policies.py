@@ -1577,8 +1577,6 @@ class GreedyCache(Cache):
 
 	@inheritdoc(Cache)
 	def get(self, k, *args, **kwargs):
-		# search content over the list
-		# if it has it push on top, otherwise return false
 		if k not in self._cache:
 			return False
 		return True
@@ -1609,8 +1607,8 @@ class GreedyCache(Cache):
 		self._last = t
 		self._weight[k] += factor*weight
 		if self._weight[k]>self._W:
-			for k in self._weight:
-				self._weight[k] /= 2
+			for content in self._weight:
+				self._weight[content] /= 2
 		self._cache.add(k)
 		if len(self._cache) > self._maxlen:
 			evicted = min(self._cache, key=lambda x: self._weight[x])
