@@ -27,7 +27,8 @@ res_paths = {
 		'cache_ratio': ('cache_placement', 'network_cache'),
 		'topology': ('topology', 'name'),
 		'strategy': ('label','name'),
-		'walpha': ('strategy', 'alpha'),
+		'round': ('label','seed'),
+		# 'walpha': ('strategy', 'alpha'),
 	},
 	'res': {
 		'weight': ('WEIGHT','MEAN'),

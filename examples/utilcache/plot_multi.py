@@ -56,12 +56,14 @@ TOPO = [
 data = pd.read_csv('multi_data.csv')
 
 fig = pyt.figure(figsize=(16, 4))
+pyt.subplots_adjust(wspace=0.3)
+
 for j, metric in enumerate(SCEN.keys()):
 	fixed_metric = SCEN.keys()[1 - j]
 	fixed_value = data.groupby(fixed_metric).size().argmax()
 	for i, topo in enumerate(TOPO):
-		ax = pyt.subplot(1,len(SCEN)+len(TOPO),i+j+1)
-		res = data.loc[data[fixed_metric] == fixed_value].sort_values(by=metric)
+		ax = pyt.subplot(1,len(SCEN)+len(TOPO),i*len(TOPO)+j+1)
+		res = data.loc[(data[fixed_metric] == fixed_value) & (data['topology']==topo)].sort_values(by=metric)
 		# print res
 		x = res[metric]
 		for method in STRATEGIES:
@@ -69,17 +71,18 @@ for j, metric in enumerate(SCEN.keys()):
 			y_up = []
 			y_down = []
 			for x_value in x:
-				screen_out = res.loc[(res[metric]==x_value) & (res['strategy']==method)]['weight']
+				screen_out = res.loc[(res[metric]==x_value) & (res['strategy']=='NOCACHE')]['weight'] - \
+							 res.loc[(res[metric]==x_value) & (res['strategy']==method)]['weight']
 				# print np.mean(screen_out)
 				y.append(np.mean(screen_out))
 				y_up.append(np.percentile(screen_out,0.95)-y[-1])
 				y_down.append(y[-1]-np.percentile(screen_out,0.05))
 			pyt.errorbar(x, y, yerr=[y_down,y_up], fmt=STYLE[method], label=STRATEGY_LABEL[method])
 		pyt.xlabel(SCEN[metric])
-		pyt.ylabel("Average Link Cost per Request")
-		pyt.title("(%c)" % (chr(ord('a')+j+i)))
-		if j == 0:
-			pyt.legend(loc="upper left", ncol=5, bbox_to_anchor=(0,1.15, 4., 0.05), mode='expand')
+		pyt.ylabel("Caching Gain")
+		pyt.title("(%c) Topology=%s" % (chr(ord('a')+i*len(TOPO)+j), topo))
+		if j + i == 0:
+			pyt.legend(loc="upper left", ncol=5, bbox_to_anchor=(-0.2,1.15, 5, 0.05), mode='expand')
 # pyt.show()
 pyt.savefig("multi.pdf", bbox_inches='tight')
 pyt.savefig("multi.png", bbox_inches='tight')
