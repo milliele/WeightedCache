@@ -22,7 +22,7 @@ STRATEGIES = [
 
 SCEN = {
 	'alpha': 'Zipf Exponent Alpha',
-	'cache_ratio': 'Cache to Population Ratio',
+	'cache_ratio': 'Cache to Population Ratio (%)',
 	# 'std': 'Change Stardard Derivation',
 }
 
@@ -37,8 +37,8 @@ STYLE = {
 }
 
 STRATEGY_LABEL = {
-		 'WLRU':         'WLRU',
-		 'WLFU':        'WLFU',
+		 'WLRU':         'U-LRU',
+		 'WLFU':        'U-LFU',
 		 'GRD':    'GRD',
 		 'PD':    'Offline',
 		 'LCE-LRU':    'LCE-LRU',
@@ -55,7 +55,7 @@ TOPO = [
 # print results
 data = pd.read_csv('multi_data.csv')
 
-fig = pyt.figure(figsize=(16, 4))
+fig = pyt.figure(figsize=(16, 3))
 pyt.subplots_adjust(wspace=0.3)
 
 for j, metric in enumerate(SCEN.keys()):
@@ -71,18 +71,22 @@ for j, metric in enumerate(SCEN.keys()):
 			y_up = []
 			y_down = []
 			for x_value in x:
-				screen_out = res.loc[(res[metric]==x_value) & (res['strategy']=='NOCACHE')]['weight'] - \
-							 res.loc[(res[metric]==x_value) & (res['strategy']==method)]['weight']
+				this_strategy = res.loc[(res[metric]==x_value) & (res['strategy']==method)][['round', 'weight']]
+				nocache = res.loc[(res[metric]==x_value) & (res['strategy']=='NOCACHE')][['round', 'weight']]\
+					.rename(columns={'weight':'nocache'})
+				screen_out = pd.merge(this_strategy, nocache,on='round')
+				screen_out = screen_out['nocache']-screen_out['weight']
 				# print np.mean(screen_out)
 				y.append(np.mean(screen_out))
-				y_up.append(np.percentile(screen_out,0.95)-y[-1])
-				y_down.append(y[-1]-np.percentile(screen_out,0.05))
-			pyt.errorbar(x, y, yerr=[y_down,y_up], fmt=STYLE[method], label=STRATEGY_LABEL[method])
+				# y_up.append(np.percentile(screen_out,95)-y[-1])
+				# y_down.append(y[-1]-np.percentile(screen_out,5))
+			pyt.plot(x*100 if metric == 'cache_ratio' else x, y, STYLE[method], label=STRATEGY_LABEL[method])
+			# pyt.errorbar(x, y, yerr=[y_down,y_up], fmt=STYLE[method], label=STRATEGY_LABEL[method])
 		pyt.xlabel(SCEN[metric])
 		pyt.ylabel("Caching Gain")
 		pyt.title("(%c) Topology=%s" % (chr(ord('a')+i*len(TOPO)+j), topo))
 		if j + i == 0:
-			pyt.legend(loc="upper left", ncol=5, bbox_to_anchor=(-0.2,1.15, 5, 0.05), mode='expand')
+			pyt.legend(loc="upper left", ncol=5, bbox_to_anchor=(-0.2,1.2, 5, 0.05), mode='expand')
 # pyt.show()
 pyt.savefig("multi.pdf", bbox_inches='tight')
 pyt.savefig("multi.png", bbox_inches='tight')

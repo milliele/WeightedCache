@@ -93,7 +93,7 @@ TOPOLOGIES =  [
 STRATEGIES = [
      'LCE-LFU',             # Leave Copy Everywhere
      'LCE-LRU',             # Leave Copy Everywhere
-     'PROB_CACHE',          # ProbCache
+     # 'PROB_CACHE',          # ProbCache
      'WLRU',
      'WLFU',
      'GRD',
@@ -223,11 +223,11 @@ def generate_scenarios(n_replication, n_begin=M_BEGIN):
 	scenarios = []
 	for alpha in ALPHA:
 		for topology in TOPOLOGIES:
-			scenarios.append((alpha, NETWORK_CACHE[2], topology))
+			scenarios.append((alpha, NETWORK_CACHE[-1], topology))
 
 	for network_cache in NETWORK_CACHE:
 		for topology in TOPOLOGIES:
-			scenarios.append((ALPHA[2], network_cache, topology))
+			scenarios.append((ALPHA[-1], network_cache, topology))
 
 	scenarios = list(set(scenarios))
 
